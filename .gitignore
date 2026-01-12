@@ -1,0 +1,14 @@
+*.exe
+/bin/
+/build/
+/tmp/
+
+.env
+*.local
+
+.idea/
+.vscode/
+
+vendor/
+
+*.log
