@@ -3,6 +3,9 @@ package main
 import (
 	"booking-service/internal/config"
 	"booking-service/internal/models"
+	"booking-service/internal/repository"
+	"booking-service/internal/services"
+	"booking-service/internal/transport"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +18,7 @@ func main() {
 	router := gin.Default()
 
 	if db == nil {
-		log.Error("database is nill")
+		log.Error("database is nil")
 		return
 	}
 
@@ -23,6 +26,12 @@ func main() {
 		log.Error("failed to migrate database", err)
 		os.Exit(1)
 	}
+
+	bookingRepo := repository.NewBookingRepository(db)
+
+	bookingService := services.NewBookingService(bookingRepo)
+
+	transport.RegisterRoutes(router, bookingService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
