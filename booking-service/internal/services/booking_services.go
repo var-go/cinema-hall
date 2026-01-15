@@ -97,7 +97,11 @@ func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
 		return nil, constants.ErrBookingNotFound
 	}
 
-	if booking.BookingStatus == "pending" {
+	if booking.BookingStatus == constants.Expired {
+		return nil, constants.ErrBookingExpired
+	}
+
+	if booking.BookingStatus == constants.Pending {
 		booking.BookingStatus = constants.Confirmed
 		err = s.bookingRepo.Update(booking.ID, *booking)
 		if err != nil {
