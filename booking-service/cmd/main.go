@@ -2,6 +2,7 @@ package main
 
 import (
 	"booking-service/internal/config"
+	"booking-service/internal/infrastructure"
 	"booking-service/internal/models"
 	"booking-service/internal/repository"
 	"booking-service/internal/services"
@@ -26,6 +27,8 @@ func main() {
 		log.Error("failed to migrate database", err)
 		os.Exit(1)
 	}
+
+	infrastructure.InitKafkaWriter()
 
 	bookingRepo := repository.NewBookingRepository(db)
 

@@ -2,7 +2,9 @@ package transport
 
 import (
 	"booking-service/internal/dto"
+	"booking-service/internal/infrastructure"
 	"booking-service/internal/services"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -42,6 +44,12 @@ func (h *bookingTransport) Create(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
+	}
+
+	if err := infrastructure.PublishOrderCreated(*booking); err != nil {
+		// Если не удалось отправить — логируем, но не отменяем заказ
+		// Заказ уже создан, клиент получит успешный ответ
+		log.Printf("Ошибка отправки в Kafka: %v", err)
 	}
 
 	ctx.JSON(http.StatusOK, booking)
