@@ -5,6 +5,7 @@ import (
 	"booking-service/internal/dto"
 	"booking-service/internal/models"
 	"booking-service/internal/repository"
+	"errors"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -94,7 +95,10 @@ func (s *bookingService) Delete(id uint) error {
 func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
 	booking, err := s.bookingRepo.GetByID(id)
 	if err != nil {
-		return nil, constants.ErrBookingNotFound
+		if errors.Is(err, constants.ErrBookingNotFound) {
+			return nil, constants.ErrBookingNotFound
+		}
+		return nil, err
 	}
 
 	switch booking.BookingStatus {
@@ -118,7 +122,10 @@ func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
 func (s *bookingService) CancelBooking(id uint) (*models.Booking, error) {
 	booking, err := s.bookingRepo.GetByID(id)
 	if err != nil {
-		return nil, constants.ErrBookingNotFound
+		if errors.Is(err, constants.ErrBookingNotFound) {
+			return nil, constants.ErrBookingNotFound
+		}
+		return nil, err
 	}
 
 	switch booking.BookingStatus {

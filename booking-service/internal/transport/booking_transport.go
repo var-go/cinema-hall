@@ -5,6 +5,7 @@ import (
 	"booking-service/internal/dto"
 	"booking-service/internal/infrastructure"
 	"booking-service/internal/services"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -69,7 +70,7 @@ func (h *bookingTransport) List(ctx *gin.Context) {
 }
 
 func (h *bookingTransport) GetByID(ctx *gin.Context) {
-	id, err := ParseID(ctx.Param("id"))
+	id, err := parseID(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -85,7 +86,7 @@ func (h *bookingTransport) GetByID(ctx *gin.Context) {
 }
 
 func (h *bookingTransport) Update(ctx *gin.Context) {
-	id, err := ParseID(ctx.Param("id"))
+	id, err := parseID(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -108,7 +109,7 @@ func (h *bookingTransport) Update(ctx *gin.Context) {
 }
 
 func (h *bookingTransport) Delete(ctx *gin.Context) {
-	id, err := ParseID(ctx.Param("id"))
+	id, err := parseID(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -123,7 +124,7 @@ func (h *bookingTransport) Delete(ctx *gin.Context) {
 }
 
 func (h *bookingTransport) ConfirmBooking(ctx *gin.Context) {
-	id, err := ParseID(ctx.Param("id"))
+	id, err := parseID(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -131,15 +132,29 @@ func (h *bookingTransport) ConfirmBooking(ctx *gin.Context) {
 
 	confirmed, err := h.service.ConfirmBooking(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
+		switch {
+
+		case errors.Is(err, constants.ErrBookingAlreadyCancelled),
+			errors.Is(err, constants.ErrBookingAlreadyConfirmed),
+			errors.Is(err, constants.ErrBookingExpired):
+			ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+
+		case errors.Is(err, constants.ErrBookingNotFound):
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, confirmed)
 }
 
 func (h *bookingTransport) CancelBooking(ctx *gin.Context) {
-	id, err := ParseID(ctx.Param("id"))
+	id, err := parseID(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -147,14 +162,27 @@ func (h *bookingTransport) CancelBooking(ctx *gin.Context) {
 
 	cancelled, err := h.service.CancelBooking(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
+		switch {
+
+		case errors.Is(err, constants.ErrBookingAlreadyCancelled),
+			errors.Is(err, constants.ErrBookingExpired):
+			ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+
+		case errors.Is(err, constants.ErrBookingNotFound):
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, cancelled)
 }
 
-func ParseID(idStr string) (uint, error) {
+func parseID(idStr string) (uint, error) {
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		return 0, constants.ErrInvalidID
