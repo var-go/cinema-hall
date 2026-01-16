@@ -1,6 +1,10 @@
 package transport
 
-import "github.com/gin-gonic/gin"
+import (
+	"user-service/internal/middleware"
+
+	"github.com/gin-gonic/gin"
+)
 
 func RegisterRouters(r *gin.Engine,
 	auth *AuthHandler,
@@ -20,9 +24,9 @@ func RegisterRouters(r *gin.Engine,
 		user.PUT("/:id", users.Update)
 		user.DELETE("/:id", users.Delete)
 	}
-	// protected
+
 	protected := r.Group("/users")
-	protected.Use(JWTMiddleware())
+	protected.Use(middleware.JWTMiddleware())
 
 	{
 		protected.GET("/me", users.Me)
