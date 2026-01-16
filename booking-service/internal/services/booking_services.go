@@ -114,6 +114,8 @@ func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
 		if err != nil {
 			return nil, err
 		}
+	default:
+		return nil, constants.ErrInvalidBookingStatus
 	}
 
 	return booking, nil
