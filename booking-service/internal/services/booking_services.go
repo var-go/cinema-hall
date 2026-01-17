@@ -32,8 +32,8 @@ func NewBookingService(bookingRepo repository.BookingRepository) BookingService 
 
 func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, error) {
 	var booking = models.Booking{
-		CinemaID: req.CinemaID,
-		UserID:   req.UserID,
+		SessionID: req.SessionID,
+		UserID:    req.UserID,
 	}
 
 	newBooking, err := s.bookingRepo.Create(&booking)
