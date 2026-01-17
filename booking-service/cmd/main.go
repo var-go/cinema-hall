@@ -23,7 +23,7 @@ func main() {
 		return
 	}
 
-	if err := db.AutoMigrate(&models.Booking{}); err != nil {
+	if err := db.AutoMigrate(&models.Booking{}, &models.BookedSeat{}); err != nil {
 		log.Error("failed to migrate database", err)
 		os.Exit(1)
 	}
