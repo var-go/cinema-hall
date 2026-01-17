@@ -8,10 +8,10 @@ type Booking struct {
 	SessionID     uint                    `json:"session_id" gorm:"not null;index"`
 	UserID        uint                    `json:"user_id" gorm:"not null;index"`
 	BookingStatus constants.BookingStatus `json:"booking_status" gorm:"default:pending;index"`
-	BookedSeats   []BookedSeats           `json:"booked_seats" gorm:"foreignKey:BookingID"`
+	BookedSeat    []BookedSeat            `json:"booked_seat" gorm:"foreignKey:BookingID"`
 }
 
-type BookedSeats struct {
+type BookedSeat struct {
 	Base
 
 	BookingID uint `json:"booking_id" gorm:"not null;index"`
