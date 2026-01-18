@@ -6,6 +6,7 @@ import (
 	"booking-service/internal/models"
 	"booking-service/internal/repository"
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -32,8 +33,11 @@ func NewBookingService(bookingRepo repository.BookingRepository) BookingService 
 
 func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, error) {
 	var booking = models.Booking{
-		SessionID: req.SessionID,
-		UserID:    req.UserID,
+		SessionID:     req.SessionID,
+		UserID:        req.UserID,
+		BookingStatus: constants.Pending,
+		PaymentStatus: constants.PaymentPending,
+		ExpiresAt:     time.Now().Add(constants.BookingTimeoutMinutes * time.Minute),
 	}
 
 	newBooking, err := s.bookingRepo.Create(&booking)

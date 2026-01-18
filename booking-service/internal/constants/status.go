@@ -8,3 +8,14 @@ const (
 	Cancelled BookingStatus = "cancelled"
 	Expired   BookingStatus = "expired"
 )
+
+type PaymentStatus string
+
+const (
+	PaymentPending PaymentStatus = "pending"
+	PaymentPaid    PaymentStatus = "paid"
+)
+
+const (
+	BookingTimeoutMinutes = 15
+)

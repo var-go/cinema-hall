@@ -85,9 +85,8 @@ func PublishOrderCreated(booking models.Booking) error {
 	// Создаём событие с нужными полями
 	// Не отправляем весь заказ — только то, что нужно для уведомления
 	event := dto.BookingCreateRequest{
-		SessionID:     booking.SessionID,
-		UserID:        booking.UserID,
-		BookingStatus: booking.BookingStatus,
+		SessionID: booking.SessionID,
+		UserID:    booking.UserID,
 	}
 
 	// Преобразуем структуру в JSON (массив байтов)
