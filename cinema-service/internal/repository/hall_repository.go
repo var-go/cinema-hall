@@ -42,7 +42,7 @@ func (r *hallRepository) Create(hall *models.Hall) error {
 
 func (r *hallRepository) List() ([]models.Hall, error) {
 	var halls []models.Hall
-	if err := r.db.Find(&halls).Error; err != nil {
+	if err := r.db.Preload("Seats").Find(&halls).Error; err != nil {
 		r.logger.Error("failed to fetch halls", "err", err)
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (r *hallRepository) Update(id uint, hall *models.Hall) error {
 func (r *hallRepository) GetById(id uint) (*models.Hall, error) {
 	var hall models.Hall
 
-	if err := r.db.First(&hall, id).Error; err != nil {
+	if err := r.db.Preload("Seats").First(&hall, id).Error; err != nil {
 		r.logger.Error("failed to fetch tool by id", "error", err, "id", id)
 		return nil, err
 	}

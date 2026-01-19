@@ -10,10 +10,14 @@ import (
 func RegisterRoutes(
 	router *gin.Engine,
 	logger *slog.Logger,
-	service services.HallService,
+	hallService services.HallService,
+	seatService services.SeatService,
+
 ) {
 
-	hallHandler := NewHallHandler(service, logger)
+	hallHandler := NewHallHandler(hallService, logger)
+	seatHandler := NewSeatHandler(seatService, logger)
 
 	hallHandler.RegisterRoutes(router)
+	seatHandler.RegisterRoutes(router)
 }
