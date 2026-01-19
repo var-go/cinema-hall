@@ -91,7 +91,7 @@ func (h *SeatHandler) RemoveSeat(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		h.logger.Error("handler: invalid hall id", "id", id)
+		h.logger.Error("handler: invalid seat id", "id", id)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
