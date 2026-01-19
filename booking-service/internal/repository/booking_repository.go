@@ -37,7 +37,7 @@ func (r *gormBookingRepository) Create(booking *models.Booking) (*models.Booking
 func (r *gormBookingRepository) List() ([]models.Booking, error) {
 	var bookings []models.Booking
 
-	if err := r.db.Find(&bookings).Error; err != nil {
+	if err := r.db.Preload("BookedSeats").Find(&bookings).Error; err != nil {
 		log.Errorf("failed to get bookings list")
 		return nil, err
 	}

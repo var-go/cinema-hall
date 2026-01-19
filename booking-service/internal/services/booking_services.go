@@ -48,17 +48,14 @@ func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, 
 		return nil, err
 	}
 
-	if len(req.SeatsID) > 0 {
-		err = s.bookingSeatRepo.Create(newBooking.ID, req.SeatsID)
-		if err != nil {
-			log.Errorf("failed to create booked seats: %v", err)
-			return nil, err
-		}
+	err = s.bookingSeatRepo.Create(newBooking.ID, req.SeatsID)
+	if err != nil {
+		log.Errorf("failed to create booked seats: %v", err)
+		return nil, err
 	}
 
 	bookingWithSeats, err := s.bookingRepo.GetByID(newBooking.ID)
 	if err != nil {
-		log.Errorf("failed to load booking with seats: %v", err)
 		return nil, err
 	}
 

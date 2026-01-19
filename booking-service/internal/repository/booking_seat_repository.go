@@ -22,7 +22,7 @@ func NewBookingSeatRepository(db *gorm.DB) BookingSeatRepository {
 }
 
 func (r *gormBookingSeat) Create(bookingID uint, seatList []uint) error {
-	var bookedSeats = []models.BookedSeat{}
+	var bookedSeats = make([]models.BookedSeat, 0, len(seatList))
 
 	for _, seat := range seatList {
 		bookedSeats = append(bookedSeats, models.BookedSeat{
