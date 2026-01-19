@@ -13,8 +13,8 @@ func RegisterRouters(r *gin.Engine,
 	{
 		authGroup := r.Group("/auth")
 
-		authGroup.POST("/auth/register", auth.Register)
-		authGroup.POST("/auth/login", auth.Login)
+		authGroup.POST("/register", auth.Register)
+		authGroup.POST("/login", auth.Login)
 	}
 	user := r.Group("/users")
 	{
