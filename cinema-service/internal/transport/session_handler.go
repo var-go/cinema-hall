@@ -111,7 +111,12 @@ func (h *SessionHandler) Update(c *gin.Context) {
 
 	session, err := h.sessionService.Update(uint(id), req)
 	if err != nil {
-		h.logger.Error("failed to update session", "id", id)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "session not found"})
+			return
+		}
+
+		h.logger.Error("failed to update session", "id", id, "err", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -133,7 +138,7 @@ func (h *SessionHandler) Delete(c *gin.Context) {
 			return
 		}
 
-		h.logger.Error("failed to update session", "id", id, "err", err)
+		h.logger.Error("failed to delete session", "id", id, "err", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

@@ -4,7 +4,9 @@ import (
 	"cinema-service/internal/dto"
 	"cinema-service/internal/models"
 	"cinema-service/internal/repository"
+	"errors"
 	"log/slog"
+	"time"
 )
 
 type SessionService interface {
@@ -43,6 +45,16 @@ func (s *sessionService) Create(req dto.CreateSessionRequest) (*models.Session, 
 			"error", err,
 		)
 		return nil, err
+	}
+
+	if req.StartTime.Before(time.Now()) {
+		s.logger.Warn(
+			"attempt to create session in the past",
+			"hall_id", req.HallID,
+			"movie_id", req.MovieID,
+			"start_time", req.StartTime,
+		)
+		return nil, errors.New("start_time must be in the future")
 	}
 
 	session := &models.Session{
@@ -86,6 +98,17 @@ func (s *sessionService) Update(id uint, req dto.UpdateSessionRequest) (*models.
 	if req.EndTime != nil {
 		session.EndTime = *req.EndTime
 	}
+
+	if !session.EndTime.After(session.StartTime) {
+		s.logger.Warn(
+			"invalid session time range",
+			"session_id", id,
+			"start_time", session.StartTime,
+			"end_time", session.EndTime,
+		)
+		return nil, errors.New("end_time must be after start_time")
+	}
+
 	if req.Status != nil {
 		session.Status = models.SessionStatus(*req.Status)
 	}
