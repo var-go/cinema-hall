@@ -1,11 +1,13 @@
 package services
 
 import (
+	"booking-service/internal/clients"
 	"booking-service/internal/constants"
 	"booking-service/internal/dto"
 	"booking-service/internal/models"
 	"booking-service/internal/repository"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2/log"
@@ -34,6 +36,28 @@ func NewBookingService(bookingRepo repository.BookingRepository, bookingSeatRepo
 }
 
 func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, error) {
+	session, err := clients.GetSession(req.SessionID)
+	if err != nil {
+		log.Errorf("failed to get session: %v", err)
+		return nil, fmt.Errorf("session not found")
+	}
+	if session == nil {
+		return nil, fmt.Errorf("session not found")
+	}
+
+	if session.StartTime.Before(time.Now()) {
+		return nil, fmt.Errorf("session already started")
+	}
+
+	bookedSeats, err := s.bookingRepo.CheckBooked(req.SessionID, req.SeatsID)
+	if err != nil {
+		log.Errorf("failed to check booked seats: %v", err)
+		return nil, err
+	}
+	if len(bookedSeats) > 0 {
+		return nil, fmt.Errorf("seats already booked: %v", bookedSeats)
+	}
+
 	var booking = models.Booking{
 		SessionID:     req.SessionID,
 		UserID:        req.UserID,
@@ -118,6 +142,10 @@ func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
 		return nil, err
 	}
 
+	if booking.ExpiresAt.Before(time.Now()) {
+		return nil, constants.ErrBookingExpired
+	}
+
 	switch booking.BookingStatus {
 	case constants.Expired:
 		return nil, constants.ErrBookingExpired
@@ -127,6 +155,7 @@ func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
 		return nil, constants.ErrBookingAlreadyConfirmed
 	case constants.Pending:
 		booking.BookingStatus = constants.Confirmed
+		booking.PaymentStatus = constants.PaymentPaid
 		err = s.bookingRepo.Update(booking.ID, *booking)
 		if err != nil {
 			return nil, err
@@ -161,6 +190,10 @@ func (s *bookingService) CancelBooking(id uint) (*models.Booking, error) {
 	err = s.bookingRepo.Update(booking.ID, *booking)
 	if err != nil {
 		return nil, err
+	}
+
+	if err := s.bookingSeatRepo.DeleteByBookingID(booking.ID); err != nil {
+		log.Errorf("failed to delete booked seats: %v", err)
 	}
 
 	return booking, nil

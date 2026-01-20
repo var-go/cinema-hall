@@ -1,6 +1,9 @@
 package dto
 
-import "booking-service/internal/constants"
+import (
+	"booking-service/internal/constants"
+	"time"
+)
 
 type BookingCreateRequest struct {
 	SessionID uint   `json:"session_id" binding:"required"`
@@ -10,4 +13,12 @@ type BookingCreateRequest struct {
 
 type BookingUpdateRequest struct {
 	BookingStatus *constants.BookingStatus `json:"booking_status"`
+}
+
+type SessionResponse struct {
+	MovieID   uint      `json:"movie_id"`
+	HallID    uint      `json:"hall_id"`
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
+	Status    string    `json:"status"`
 }

@@ -9,6 +9,7 @@ import (
 
 type BookingSeatRepository interface {
 	Create(bookingID uint, seatList []uint) error
+	DeleteByBookingID(bookingID uint) error
 }
 
 type gormBookingSeat struct {
@@ -36,5 +37,13 @@ func (r *gormBookingSeat) Create(bookingID uint, seatList []uint) error {
 		return err
 	}
 
+	return nil
+}
+
+func (r *gormBookingSeat) DeleteByBookingID(bookingID uint) error {
+	if err := r.db.Where("booking_id = ?", bookingID).Delete(&models.BookedSeat{}).Error; err != nil {
+		log.Errorf("failed to delete booked seats by booking_id: %v", err)
+		return err
+	}
 	return nil
 }
