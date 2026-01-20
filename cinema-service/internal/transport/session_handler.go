@@ -3,11 +3,13 @@ package transport
 import (
 	"cinema-service/internal/dto"
 	"cinema-service/internal/services"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type SessionHandler struct {
@@ -45,6 +47,11 @@ func (h *SessionHandler) Create(c *gin.Context) {
 
 	session, err := h.sessionService.Create(req)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "hall not found"})
+			return
+		}
+
 		h.logger.Error("failed to create session", "err", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -74,8 +81,13 @@ func (h *SessionHandler) GetById(c *gin.Context) {
 
 	session, err := h.sessionService.GetById(uint(id))
 	if err != nil {
-		h.logger.Error("failed to fetch session", "id", id)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "session not found"})
+			return
+		}
+
+		h.logger.Error("failed to fetch session", "id", id, "err", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch session"})
 		return
 	}
 
@@ -116,8 +128,13 @@ func (h *SessionHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.sessionService.Delete(uint(id)); err != nil {
-		h.logger.Error("failed to delete session", "id", id)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to delete session"})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "session not found"})
+			return
+		}
+
+		h.logger.Error("failed to update session", "id", id, "err", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -134,8 +151,12 @@ func (h *SessionHandler) ListByMovieID(c *gin.Context) {
 
 	sessions, err := h.sessionService.ListByMovieID(uint(movieID))
 	if err != nil {
-		h.logger.Error("failed to list sessions by movie id", "movie_id", movieID)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to list sessions"})
+		h.logger.Error(
+			"failed to list sessions by movie id",
+			"movie_id", movieID,
+			"err", err,
+		)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
