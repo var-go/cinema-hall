@@ -99,7 +99,7 @@ func (s *sessionService) Update(id uint, req dto.UpdateSessionRequest) (*models.
 		session.EndTime = *req.EndTime
 	}
 
-	if !session.EndTime.After(session.StartTime) {
+	if session.EndTime.Before(session.StartTime) || session.EndTime.Equal(session.StartTime) {
 		s.logger.Warn(
 			"invalid session time range",
 			"session_id", id,
