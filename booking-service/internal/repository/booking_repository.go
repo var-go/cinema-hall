@@ -107,7 +107,7 @@ func (r *gormBookingRepository) CheckBooked(sessionID uint, seatIDs []uint) ([]u
 
 	err := r.db.
 		Joins("JOIN bookings ON booked_seats.booking_id = bookings.id").
-		Where("bookings.session_id = ? AND bookings.booking_status IN (?, ?)",
+		Where("bookings.session_id = ? AND bookings.booking_status IN (?, ?) AND booked_seats.seat_id IN (?)",
 			sessionID, constants.Pending, constants.Confirmed).
 		Find(&bookedSeats).Error
 

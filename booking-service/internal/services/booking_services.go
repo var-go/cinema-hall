@@ -237,7 +237,7 @@ func (s *bookingService) CancelBooking(id uint) (*models.Booking, error) {
 
 	if err := s.bookingSeatRepo.DeleteByBookingID(tx, booking.ID); err != nil {
 		tx.Rollback()
-		log.Errorf("failed to delete booked seats: %v", err)
+		return nil, err
 	}
 
 	if err := tx.Commit().Error; err != nil {
