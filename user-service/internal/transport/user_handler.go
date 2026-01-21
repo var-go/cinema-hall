@@ -81,7 +81,13 @@ func (h *UserHandler) Update(c *gin.Context) {
 	}
 	var req dto.UpdateUserRequest
 
-	c.ShouldBindJSON(&req)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{
+			"error": "invalid request body",
+		})
+		return
+	}
+
 	user, err := h.service.Update(uint(id), req)
 	if err != nil {
 		c.JSON(404, gin.H{"error": "not found"})

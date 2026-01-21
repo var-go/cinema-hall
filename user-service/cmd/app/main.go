@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"user-service/internal/config"
+	"user-service/internal/kafka"
 	"user-service/internal/models"
 	"user-service/internal/repository"
 	"user-service/internal/services"
@@ -24,7 +25,11 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 
-	authService := services.NewAuthService(userRepo)
+	producer := kafka.NewProducer("localhost:9092")
+	kafka.StartUserCreatedConsumer("localhost:9092")
+
+	authService := services.NewAuthService(userRepo, producer)
+
 	userService := services.NewUserService(userRepo)
 
 	authHandler := transport.NewAuthHandler(authService)
@@ -33,6 +38,8 @@ func main() {
 	r := gin.Default()
 	transport.RegisterRouters(r, authHandler, userHandler)
 
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal(err)
+	}
 
 }

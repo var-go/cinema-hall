@@ -1,12 +1,12 @@
 package services
 
 import (
+	"user-service/internal/auth"
 	"user-service/internal/dto"
 	"user-service/internal/errors"
+	"user-service/internal/kafka"
 	"user-service/internal/models"
 	"user-service/internal/repository"
-
-	"user-service/internal/auth"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -17,11 +17,12 @@ type AuthService interface {
 }
 
 type authService struct {
-	repo repository.UserRepository
+	repo     repository.UserRepository
+	producer *kafka.Producer
 }
 
-func NewAuthService(repo repository.UserRepository) AuthService {
-	return &authService{repo: repo}
+func NewAuthService(repo repository.UserRepository, producer *kafka.Producer) AuthService {
+	return &authService{repo: repo, producer: producer}
 }
 
 func (s *authService) Register(req dto.RegisterRequest) (*models.User, error) {
@@ -47,6 +48,10 @@ func (s *authService) Register(req dto.RegisterRequest) (*models.User, error) {
 	if err := s.repo.Create(user); err != nil {
 		return nil, err
 	}
+	_ = s.producer.SendUserCreated(kafka.UserCreatedEvent{
+		ID:    user.ID,
+		Email: user.Email,
+	})
 
 	return user, nil
 }
