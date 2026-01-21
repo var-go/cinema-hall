@@ -33,7 +33,7 @@ func main() {
 	bookingRepo := repository.NewBookingRepository(db)
 	bookingSeatRepo := repository.NewBookingSeatRepository(db)
 
-	bookingService := services.NewBookingService(bookingRepo, bookingSeatRepo)
+	bookingService := services.NewBookingService(bookingRepo, bookingSeatRepo, db)
 
 	transport.RegisterRoutes(router, bookingService)
 

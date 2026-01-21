@@ -8,7 +8,8 @@ import (
 )
 
 type BookingSeatRepository interface {
-	Create(bookingID uint, seatList []uint) error
+	Create(tx *gorm.DB, bookingID uint, seatList []uint) error
+	DeleteByBookingID(tx *gorm.DB, bookingID uint) error
 }
 
 type gormBookingSeat struct {
@@ -21,7 +22,7 @@ func NewBookingSeatRepository(db *gorm.DB) BookingSeatRepository {
 	}
 }
 
-func (r *gormBookingSeat) Create(bookingID uint, seatList []uint) error {
+func (r *gormBookingSeat) Create(tx *gorm.DB, bookingID uint, seatList []uint) error {
 	var bookedSeats = make([]models.BookedSeat, 0, len(seatList))
 
 	for _, seat := range seatList {
@@ -31,8 +32,17 @@ func (r *gormBookingSeat) Create(bookingID uint, seatList []uint) error {
 		})
 	}
 
-	if err := r.db.Create(&bookedSeats).Error; err != nil {
+	if err := tx.Create(&bookedSeats).Error; err != nil {
 		log.Errorf("failed to create booked seats: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *gormBookingSeat) DeleteByBookingID(tx *gorm.DB, bookingID uint) error {
+	if err := tx.Where("booking_id = ?", bookingID).Delete(&models.BookedSeat{}).Error; err != nil {
+		log.Errorf("failed to delete booked seats by booking_id: %v", err)
 		return err
 	}
 
