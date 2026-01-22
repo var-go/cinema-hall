@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -10,12 +11,17 @@ import (
 )
 
 func SetUpDatabaseConnection(logger *slog.Logger) (*gorm.DB, error) {
+	// Загружаем .env файл, но не считаем ошибкой его отсутствие
+	// (в Docker переменные окружения задаются через docker-compose)
 	if err := godotenv.Load(); err != nil {
-		logger.Error("Error loading .env file", "error", err)
-		return nil, err
+		logger.Info("No .env file found, using environment variables", "error", err)
 	}
 
 	dbUrl := os.Getenv("DATABASE_URL")
+	if dbUrl == "" {
+		logger.Error("DATABASE_URL environment variable is not set")
+		return nil, fmt.Errorf("DATABASE_URL is required")
+	}
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dbUrl,

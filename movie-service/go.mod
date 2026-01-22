@@ -1,6 +1,6 @@
 module movie-service
 
-go 1.25.1
+go 1.25.4
 
 require gorm.io/driver/postgres v1.6.0
 

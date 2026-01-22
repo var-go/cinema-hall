@@ -6,16 +6,24 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
-
-const cinemaServiceUrl = "http://localhost:8082"
 
 var httpClient = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
+func getCinemaServiceURL() string {
+	url := os.Getenv("CINEMA_SERVICE_URL")
+	if url == "" {
+		return "http://localhost:8081" // Значение по умолчанию для локальной разработки
+	}
+	return url
+}
+
 func GetSession(sessionID uint) (*dto.SessionResponse, error) {
+	cinemaServiceUrl := getCinemaServiceURL()
 	url := fmt.Sprintf("%s/sessions/%d", cinemaServiceUrl, sessionID)
 
 	resp, err := httpClient.Get(url)

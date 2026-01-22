@@ -18,7 +18,7 @@ COPY . .
 
 # Собираем статически связанный бинарник с оптимизациями
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o main ./cmd/app/
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o main ./cmd/
 
 # Этап 2: Запуск
 FROM alpine:3.19
@@ -32,18 +32,17 @@ RUN apk --no-cache add ca-certificates
 COPY --from=builder /app/main .
 
 # Переменные окружения (значения по умолчанию, можно переопределить в docker-compose)
-ENV PORT=8080
-ENV DB_HOST=postgres
-ENV DB_PORT=5432
+ENV DB_HOST=booking-postgres
 ENV DB_USER=postgres
-ENV DB_PASS=postgres
-ENV DB_NAME=user_db
-ENV DB_SSLMODE=disable
+ENV DB_PASSWORD=postgres
+ENV DB_NAME=booking_db
+ENV DB_PORT=5432
+ENV PORT=8082
+ENV LOG_LEVEL=info
 ENV KAFKA_BROKER=kafka:9092
-ENV JWT_SECRET=your-secret-key-change-in-production
-ENV BOOKING_SERVICE_URL=http://booking-service:8082
+ENV CINEMA_SERVICE_URL=http://cinema-service:8081
 
 # Открываем порт
-EXPOSE 8080
+EXPOSE 8082
 
 CMD ["./main"]
