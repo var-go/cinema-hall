@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"user-service/internal/config"
 	"user-service/internal/kafka"
 	"user-service/internal/models"
@@ -25,8 +26,12 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 
-	producer := kafka.NewProducer("localhost:9092")
-	kafka.StartUserCreatedConsumer("localhost:9092")
+	broker := os.Getenv("KAFKA_BROKER")
+	if broker == "" {
+		log.Fatal("KAFKA_BROKER is not set")
+	}
+
+	producer := kafka.NewProducer(broker)
 
 	authService := services.NewAuthService(userRepo, producer)
 

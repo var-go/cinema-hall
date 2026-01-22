@@ -48,10 +48,12 @@ func (s *authService) Register(req dto.RegisterRequest) (*models.User, error) {
 	if err := s.repo.Create(user); err != nil {
 		return nil, err
 	}
-	_ = s.producer.SendUserCreated(kafka.UserCreatedEvent{
+	if err := s.producer.SendUserCreated(kafka.UserCreatedEvent{
 		ID:    user.ID,
 		Email: user.Email,
-	})
+	}); err != nil {
+		return nil, err
+	}
 
 	return user, nil
 }

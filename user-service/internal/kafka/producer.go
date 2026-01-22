@@ -26,7 +26,10 @@ func NewProducer(broker string) *Producer {
 }
 
 func (p *Producer) SendUserCreated(event UserCreatedEvent) error {
-	data, _ := json.Marshal(event)
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
 
 	return p.writer.WriteMessages(
 		context.Background(),
