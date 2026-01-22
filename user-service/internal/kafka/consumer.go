@@ -14,9 +14,11 @@ func StartUserCreatedConsumer(ctx context.Context, broker string, log *slog.Logg
 		GroupID: "user-service-debug",
 	})
 
-	defer r.Close()
-
 	go func() {
+		defer r.Close()
+
+		log.Info("kafka consumer started")
+
 		for {
 			msg, err := r.ReadMessage(ctx)
 			if err != nil {

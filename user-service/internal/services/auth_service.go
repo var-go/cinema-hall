@@ -54,7 +54,7 @@ func (s *authService) Register(req dto.RegisterRequest) (*models.User, error) {
 		ID:    user.ID,
 		Email: user.Email,
 	}); err != nil {
-		s.log.Error("invalid to send user.created event", "user_id", user.ID, "err", err)
+		s.log.Error("failed to send user.created event", "user_id", user.ID, "err", err)
 	}
 
 	return user, nil
