@@ -86,6 +86,10 @@ func (h *bookingTransport) GetByID(ctx *gin.Context) {
 
 	booking, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, constants.ErrBookingNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		config.GetLogger().Error("Failed to get booking by ID", "error", err, "booking_id", id)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -112,6 +116,10 @@ func (h *bookingTransport) Update(ctx *gin.Context) {
 
 	booking, err := h.service.Update(uint(id), req)
 	if err != nil {
+		if errors.Is(err, constants.ErrBookingNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		config.GetLogger().Error("Failed to update booking", "error", err, "booking_id", id)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -129,6 +137,10 @@ func (h *bookingTransport) Delete(ctx *gin.Context) {
 	}
 
 	if err := h.service.Delete(uint(id)); err != nil {
+		if errors.Is(err, constants.ErrBookingNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		config.GetLogger().Error("Failed to delete booking", "error", err, "booking_id", id)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

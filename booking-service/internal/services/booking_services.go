@@ -164,35 +164,59 @@ func (s *bookingService) Delete(id uint) error {
 }
 
 func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
 
-	booking, err := s.bookingRepo.GetByID(id)
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
+	booking, err := s.bookingRepo.GetByIDWithTx(tx, id)
 	if err != nil {
 		if errors.Is(err, constants.ErrBookingNotFound) {
+			tx.Rollback()
 			return nil, constants.ErrBookingNotFound
 		}
+
+		tx.Rollback()
 		return nil, err
 	}
 
 	if !booking.ExpiresAt.After(time.Now()) {
+		tx.Rollback()
 		return nil, constants.ErrBookingExpired
 	}
 
 	switch booking.BookingStatus {
 	case constants.Expired:
+		tx.Rollback()
 		return nil, constants.ErrBookingExpired
 	case constants.Cancelled:
+		tx.Rollback()
 		return nil, constants.ErrBookingAlreadyCancelled
 	case constants.Confirmed:
+		tx.Rollback()
 		return nil, constants.ErrBookingAlreadyConfirmed
 	case constants.Pending:
 		booking.BookingStatus = constants.Confirmed
 		booking.PaymentStatus = constants.PaymentPaid
-		err = s.bookingRepo.Update(booking.ID, *booking)
+		err = s.bookingRepo.UpdateWithTx(tx, booking.ID, *booking)
 		if err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 	default:
+		tx.Rollback()
 		return nil, constants.ErrInvalidBookingStatus
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return booking, nil
