@@ -1,29 +1,38 @@
-# ---------- build stage ----------
-FROM golang:1.22-alpine AS builder
+# Этап 1: Сборка
+FROM golang:1.25 AS builder
 
 WORKDIR /app
 
-# зависимости
 COPY go.mod go.sum ./
 RUN go mod download
 
-# код
 COPY . .
 
-# сборка
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -o cinema-service ./cmd/app
+# Собираем статически связанный бинарник
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/
 
-# ---------- runtime stage ----------
-FROM alpine:3.20
+# Этап 2: Запуск
+FROM alpine:3.19
 
 WORKDIR /app
 
-# ca-certificates нужны для https
-RUN apk add --no-cache ca-certificates
+# Устанавливаем сертификаты для HTTPS запросов
+RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /app/cinema-service .
+# Копируем бинарник из этапа сборки
+COPY --from=builder /app/main .
 
-EXPOSE 8080
+# Переменные окружения (значения по умолчанию, можно переопределить в docker-compose)
+ENV PORT=8081
+ENV DB_HOST=postgres
+ENV DB_USER=postgres
+ENV DB_PASS=postgres
+ENV DB_NAME=cinema_db
+ENV DB_PORT=5432
+ENV DB_SSLMODE=disable
+ENV LOG_LEVEL=info
 
-CMD ["./cinema-service"]
+# Открываем порт
+EXPOSE 8081
+
+CMD ["./main"]

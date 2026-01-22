@@ -1,0 +1,52 @@
+# Binaries
+bin/
+tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+
+# Test files
+*_test.go
+test/
+tests/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+README.md
+docs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+*.log
+build-errors.log
+
+# Air (hot reload)
+.air.toml
+air.toml
+
+# Coverage
+coverage.out
+coverage.html
+

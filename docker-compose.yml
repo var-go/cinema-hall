@@ -1,15 +1,254 @@
 services:
+  # ========== DATABASES ==========
+  booking-postgres:
+    image: postgres:15-alpine
+    container_name: booking-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: booking_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - booking-postgres-data:/var/lib/postgresql/data
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  cinema-postgres:
+    image: postgres:15-alpine
+    container_name: cinema-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cinema_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - cinema-postgres-data:/var/lib/postgresql/data
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  user-postgres:
+    image: postgres:15-alpine
+    container_name: user-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - user-postgres-data:/var/lib/postgresql/data
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  movie-postgres:
+    image: postgres:15-alpine
+    container_name: movie-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: movie_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - movie-postgres-data:/var/lib/postgresql/data
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # ========== KAFKA ==========
   kafka:
     image: apache/kafka:latest
     container_name: kafka
     ports:
       - "9092:9092"
+      - "9093:9093"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
-      KAFKA_LISTENERS: CONTROLLER://localhost:9091,PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9091
+      KAFKA_LISTENERS: CONTROLLER://kafka:9091,PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/9092' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8086:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9999
+    depends_on:
+      - kafka
+    networks:
+      - cinema-network
+
+  # ========== MICROSERVICES ==========
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      DB_HOST: user-postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: user_db
+      DB_SSLMODE: disable
+      KAFKA_BROKER: kafka:9092
+      JWT_SECRET: your-secret-key-change-in-production
+      BOOKING_SERVICE_URL: http://booking-service:8082
+    depends_on:
+      user-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - cinema-network
+    restart: unless-stopped
+
+  cinema-service:
+    build:
+      context: ./cinema-service
+      dockerfile: Dockerfile
+    container_name: cinema-service
+    ports:
+      - "8081:8081"
+    environment:
+      PORT: 8081
+      DB_HOST: cinema-postgres
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: cinema_db
+      DB_PORT: 5432
+      DB_SSLMODE: disable
+      LOG_LEVEL: info
+    depends_on:
+      cinema-postgres:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+
+  movie-service:
+    build:
+      context: ./movie-service
+      dockerfile: Dockerfile
+    container_name: movie-service
+    ports:
+      - "8083:8083"
+    environment:
+      PORT: 8083
+      DATABASE_URL: postgres://postgres:postgres@movie-postgres:5432/movie_db?sslmode=disable
+      LOG_LEVEL: info
+    depends_on:
+      movie-postgres:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+
+  booking-service:
+    build:
+      context: ./booking-service
+      dockerfile: Dockerfile
+    container_name: booking-service
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: booking-postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: booking_db
+      DB_PORT: 5432
+      PORT: 8082
+      LOG_LEVEL: info
+      KAFKA_BROKER: kafka:9092
+      CINEMA_SERVICE_URL: http://cinema-service:8081
+    depends_on:
+      booking-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      cinema-service:
+        condition: service_started
+    networks:
+      - cinema-network
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      - "8085:8085"
+    environment:
+      PORT: 8085
+      USER_SERVICE_URL: http://user-service:8080
+      MOVIE_SERVICE_URL: http://movie-service:8083
+      CINEMA_SERVICE_URL: http://cinema-service:8081
+      BOOKING_SERVICE_URL: http://booking-service:8082
+      JWT_SECRET: your-secret-key-change-in-production
+    depends_on:
+      - user-service
+      - cinema-service
+      - movie-service
+      - booking-service
+    networks:
+      - cinema-network
+    restart: unless-stopped
+
+# ========== VOLUMES ==========
+volumes:
+  booking-postgres-data:
+  cinema-postgres-data:
+  user-postgres-data:
+  movie-postgres-data:
+
+# ========== NETWORKS ==========
+networks:
+  cinema-network:
+    driver: bridge

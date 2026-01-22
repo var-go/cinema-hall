@@ -24,7 +24,7 @@ func NewBookingHandler(service services.BookingService) *bookingTransport {
 }
 
 func (h *bookingTransport) BookingRoutes(ctx *gin.Engine) {
-	api := ctx.Group("/booking")
+	api := ctx.Group("/bookings")
 	{
 		api.POST("", h.Create)
 		api.GET("", h.List)
@@ -55,12 +55,6 @@ func (h *bookingTransport) Create(ctx *gin.Context) {
 	}
 
 	config.GetLogger().Info("Booking created successfully", "booking_id", booking.ID, "session_id", booking.SessionID, "user_id", booking.UserID)
-
-	// if err := infrastructure.PublishOrderCreated(*booking); err != nil {
-	// 	// Если не удалось отправить — логируем, но не отменяем заказ
-	// 	// Заказ уже создан, клиент получит успешный ответ
-	// 	config.GetLogger().Error("Failed to publish event to Kafka", "error", err, "booking_id", booking.ID)
-	// }
 
 	ctx.JSON(http.StatusOK, booking)
 }
