@@ -1,6 +1,7 @@
 package services
 
 import (
+	"log/slog"
 	"user-service/internal/auth"
 	"user-service/internal/dto"
 	"user-service/internal/errors"
@@ -19,10 +20,11 @@ type AuthService interface {
 type authService struct {
 	repo     repository.UserRepository
 	producer *kafka.Producer
+	log      *slog.Logger
 }
 
-func NewAuthService(repo repository.UserRepository, producer *kafka.Producer) AuthService {
-	return &authService{repo: repo, producer: producer}
+func NewAuthService(repo repository.UserRepository, producer *kafka.Producer, log *slog.Logger) AuthService {
+	return &authService{repo: repo, producer: producer, log: log}
 }
 
 func (s *authService) Register(req dto.RegisterRequest) (*models.User, error) {
@@ -52,7 +54,7 @@ func (s *authService) Register(req dto.RegisterRequest) (*models.User, error) {
 		ID:    user.ID,
 		Email: user.Email,
 	}); err != nil {
-		return nil, err
+		s.log.Error("invalid tot send user.created event", "user_id", user.ID, "err", err)
 	}
 
 	return user, nil

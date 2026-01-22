@@ -35,7 +35,7 @@ func main() {
 
 	producer := kafka.NewProducer(broker)
 
-	authService := services.NewAuthService(userRepo, producer)
+	authService := services.NewAuthService(userRepo, producer, logger)
 
 	userService := services.NewUserService(userRepo, logger)
 

@@ -110,6 +110,7 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	if err != nil {
 		h.log.Warn("invalid user id for delete", "id", c.Param("id"))
 		c.JSON(400, gin.H{"error": "invalid user id"})
+		return
 	}
 	if err := h.service.Delete(uint(id)); err != nil {
 		h.log.Warn("user not found for delete", "id", id)
