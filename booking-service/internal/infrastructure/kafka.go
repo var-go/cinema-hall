@@ -15,7 +15,7 @@ import (
 
 const (
 	kafkaBroker = "localhost:9092"
-	kafkaTopic  = "orders"
+	kafkaTopic  = "bookings"
 )
 
 // kafkaWriter — объект для отправки сообщений в Kafka
@@ -84,9 +84,10 @@ func InitKafkaWriter() {
 func PublishOrderCreated(booking models.Booking) error {
 	// Создаём событие с нужными полями
 	// Не отправляем весь заказ — только то, что нужно для уведомления
-	event := dto.BookingCreateRequest{
-		SessionID: booking.SessionID,
-		UserID:    booking.UserID,
+	event := dto.BookingConfirmResponse{
+		SessionID:     booking.SessionID,
+		UserID:        booking.UserID,
+		BookingStatus: &booking.BookingStatus, // Указатель на статус
 	}
 
 	// Преобразуем структуру в JSON (массив байтов)

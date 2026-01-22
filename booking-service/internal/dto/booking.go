@@ -22,3 +22,9 @@ type SessionResponse struct {
 	EndTime   time.Time `json:"end_time"`
 	Status    string    `json:"status"`
 }
+
+type BookingConfirmResponse struct {
+	SessionID     uint                     `json:"session_id"`
+	UserID        uint                     `json:"user_id"`
+	BookingStatus *constants.BookingStatus `json:"booking_status"`
+}

@@ -56,11 +56,11 @@ func (h *bookingTransport) Create(ctx *gin.Context) {
 
 	config.GetLogger().Info("Booking created successfully", "booking_id", booking.ID, "session_id", booking.SessionID, "user_id", booking.UserID)
 
-	if err := infrastructure.PublishOrderCreated(*booking); err != nil {
-		// Если не удалось отправить — логируем, но не отменяем заказ
-		// Заказ уже создан, клиент получит успешный ответ
-		config.GetLogger().Error("Failed to publish event to Kafka", "error", err, "booking_id", booking.ID)
-	}
+	// if err := infrastructure.PublishOrderCreated(*booking); err != nil {
+	// 	// Если не удалось отправить — логируем, но не отменяем заказ
+	// 	// Заказ уже создан, клиент получит успешный ответ
+	// 	config.GetLogger().Error("Failed to publish event to Kafka", "error", err, "booking_id", booking.ID)
+	// }
 
 	ctx.JSON(http.StatusOK, booking)
 }
@@ -177,6 +177,18 @@ func (h *bookingTransport) ConfirmBooking(ctx *gin.Context) {
 		}
 	}
 
+	if err := infrastructure.PublishOrderCreated(*confirmed); err != nil {
+		// Если не удалось отправить — логируем, но не отменяем подтверждение
+		config.GetLogger().Error("Failed to publish event to Kafka",
+			"error", err,
+			"booking_id", confirmed.ID,
+			"session_id", confirmed.SessionID)
+		// НЕ прерываем выполнение - бронь уже подтверждена
+	} else {
+		config.GetLogger().Info("Successfully published booking confirm event to Kafka",
+			"booking_id", confirmed.ID)
+	}
+
 	ctx.JSON(http.StatusOK, confirmed)
 }
 
@@ -204,6 +216,21 @@ func (h *bookingTransport) CancelBooking(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+	}
+
+	if err := infrastructure.PublishOrderCreated(*cancelled); err != nil {
+		// Если не удалось отправить — логируем, но не отменяем операцию
+		config.GetLogger().Error("Failed to publish cancel event to Kafka",
+			"error", err,
+			"booking_id", cancelled.ID,
+			"session_id", cancelled.SessionID)
+		// НЕ прерываем выполнение - бронь уже отменена
+	} else {
+		config.GetLogger().Info("Successfully published booking cancel event to Kafka",
+			"booking_id", cancelled.ID,
+			"session_id", cancelled.SessionID,
+			"user_id", cancelled.UserID,
+			"status", cancelled.BookingStatus)
 	}
 
 	ctx.JSON(http.StatusOK, cancelled)
