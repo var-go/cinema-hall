@@ -9,6 +9,7 @@ type MovieCreateRequest struct {
 	Duration    uint                  `json:"duration" binding:"required"`
 	AgeRating   string                `json:"age_rating" binding:"required"`
 	MovieStatus constants.MovieStatus `json:"movie_status" binding:"required"`
+	GenresID    []uint                `json:"genres_id"`
 }
 
 type MovieUpdateRequest struct {
@@ -18,4 +19,5 @@ type MovieUpdateRequest struct {
 	Duration    *uint                  `json:"duration"`
 	AgeRating   *string                `json:"age_rating"`
 	MovieStatus *constants.MovieStatus `json:"movie_status"`
+	GenresID    *[]uint                `json:"genres_id"`
 }

@@ -33,7 +33,7 @@ func main() {
 	movieRepo := repository.NewMovieRepository(db, logger)
 	genreRepo := repository.NewGenreRepository(db, logger)
 
-	movieService := services.NewMovieService(movieRepo, logger)
+	movieService := services.NewMovieService(movieRepo, genreRepo, logger)
 	genreService := services.NewGenreService(genreRepo, logger)
 
 	transport.RegisterRoutes(r, movieService, genreService, logger)

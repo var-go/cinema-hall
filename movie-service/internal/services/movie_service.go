@@ -24,18 +24,31 @@ type MovieService interface {
 }
 
 type movieService struct {
-	repo   repository.MovieRepository
-	logger *slog.Logger
+	repo      repository.MovieRepository
+	genreRepo repository.GenreRepository
+	logger    *slog.Logger
 }
 
-func NewMovieService(movieRepo repository.MovieRepository, logger *slog.Logger) MovieService {
+func NewMovieService(movieRepo repository.MovieRepository, genreRepo repository.GenreRepository, logger *slog.Logger) MovieService {
 	return &movieService{
-		repo:   movieRepo,
-		logger: logger,
+		repo:      movieRepo,
+		genreRepo: genreRepo,
+		logger:    logger,
 	}
 }
 
 func (s *movieService) Create(req *dto.MovieCreateRequest) (*models.Movie, error) {
+
+	var genres []models.Genre
+
+	for _, genreID := range req.GenresID {
+		genre, err := s.genreRepo.GetByID(genreID)
+		if err != nil {
+			s.logger.Error("movie create failed: get genre by id", slog.Any("error", err))
+			return nil, err
+		}
+		genres = append(genres, *genre)
+	}
 
 	movie := models.Movie{
 		Title:       req.Title,
@@ -44,6 +57,7 @@ func (s *movieService) Create(req *dto.MovieCreateRequest) (*models.Movie, error
 		Duration:    req.Duration,
 		AgeRating:   req.AgeRating,
 		MovieStatus: req.MovieStatus,
+		Genres:      genres,
 	}
 
 	if err := s.repo.Create(&movie); err != nil {
@@ -109,6 +123,13 @@ func (s *movieService) Update(id uint, req *dto.MovieUpdateRequest) (*models.Mov
 		s.logger.Error("movie update failed: get by id", slog.Any("id", id), slog.Any("error", err))
 		return nil, err
 	}
+
+	genre, err := s.genreRepo.GetByID(id)
+	if err != nil {
+		s.logger.Error("movie update failed: get genre by id", slog.Any("id", id), slog.Any("error", err))
+		return nil, err
+	}
+	movie.Genres = []models.Genre{*genre}
 
 	if req.Title != nil {
 		movie.Title = *req.Title

@@ -77,9 +77,15 @@ func (r *gormGenreRepository) Update(genre *models.Genre) error {
 
 func (r *gormGenreRepository) Delete(id uint) error {
 
-	if err := r.DB.Delete(&models.Genre{}, id).Error; err != nil {
+	res := r.DB.Delete(&models.Genre{}, id)
+	if err := res.Error; err != nil {
 		r.logger.Error("failed to delete genre", slog.Any("id", id), slog.Any("error", err))
 		return err
+	}
+
+	if res.RowsAffected == 0 {
+		r.logger.Info("genre not found for delete", slog.Any("id", id))
+		return gorm.ErrRecordNotFound
 	}
 
 	return nil
