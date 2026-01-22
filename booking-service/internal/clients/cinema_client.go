@@ -6,14 +6,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const cinemaServiceUrl = "http://localhost:8082"
 
+var httpClient = &http.Client{
+	Timeout: 5 * time.Second,
+}
+
 func GetSession(sessionID uint) (*dto.SessionResponse, error) {
 	url := fmt.Sprintf("%s/sessions/%d", cinemaServiceUrl, sessionID)
 
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return nil, err
 	}

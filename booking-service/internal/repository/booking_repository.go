@@ -4,6 +4,7 @@ import (
 	"booking-service/internal/config"
 	"booking-service/internal/constants"
 	"booking-service/internal/models"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -57,6 +58,9 @@ func (r *gormBookingRepository) GetByID(id uint) (*models.Booking, error) {
 	var booking models.Booking
 
 	if err := r.db.Preload("BookedSeats").First(&booking, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, constants.ErrBookingNotFound
+		}
 		config.GetLogger().Error("Failed to get booking by id", "error", err, "booking_id", id)
 		return nil, err
 	}
@@ -68,6 +72,9 @@ func (r *gormBookingRepository) GetByIDWithTx(tx *gorm.DB, id uint) (*models.Boo
 	var booking models.Booking
 
 	if err := tx.Preload("BookedSeats").First(&booking, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, constants.ErrBookingNotFound
+		}
 		config.GetLogger().Error("Failed to get booking by id in transaction", "error", err, "booking_id", id)
 		return nil, err
 	}
