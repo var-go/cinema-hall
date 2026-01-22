@@ -1,0 +1,29 @@
+# ---------- build stage ----------
+FROM golang:1.22-alpine AS builder
+
+WORKDIR /app
+
+# зависимости
+COPY go.mod go.sum ./
+RUN go mod download
+
+# код
+COPY . .
+
+# сборка
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -o cinema-service ./cmd/app
+
+# ---------- runtime stage ----------
+FROM alpine:3.20
+
+WORKDIR /app
+
+# ca-certificates нужны для https
+RUN apk add --no-cache ca-certificates
+
+COPY --from=builder /app/cinema-service .
+
+EXPOSE 8080
+
+CMD ["./cinema-service"]
