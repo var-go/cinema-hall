@@ -12,8 +12,15 @@
 
 ## Технологический стек
 
-**Backend**: Go 1.25.4, Gin, PostgreSQL 15, GORM, Apache Kafka, JWT  
-**Infrastructure**: Docker, Docker Compose, API Gateway  
+![Go](https://img.shields.io/badge/Go-1.25.4-00ADD8?logo=go)
+![Gin](https://img.shields.io/badge/Gin-1.9+-00D8FF?logo=go)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)
+![GORM](https://img.shields.io/badge/GORM-1.25+-FF6B6B?logo=go)
+![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.5+-231F20?logo=apache-kafka)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=json-web-tokens)
+![Docker](https://img.shields.io/badge/Docker-20.10+-2496ED?logo=docker)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2.0+-2496ED?logo=docker)
+
 **Архитектура**: Микросервисная (5 сервисов: User, Movie, Cinema, Booking, Gateway)
 
 ## Архитектура
