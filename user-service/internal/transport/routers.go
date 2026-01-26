@@ -21,10 +21,8 @@ func RegisterRouters(r *gin.Engine,
 	admin.Use(middleware.JWTMiddleware())
 	admin.Use(middleware.AdminMiddleware())
 	{
-		// admin.POST("", users.Create)
 		admin.DELETE("/:id", users.Delete)
 		admin.PUT("/:id", users.Update)
-
 	}
 
 	user := r.Group("/users")

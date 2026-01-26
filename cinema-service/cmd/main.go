@@ -44,7 +44,7 @@ func main() {
 	transport.RegisterRoutes(r, logger, hallService, seatService, sessionService)
 
 	if err := r.Run(":" + port); err != nil {
-		log.Error("не удалось запустить сервер", slog.Any("error", err))
+		log.Error("failed to start server", slog.Any("error", err))
 		os.Exit(1)
 	}
 

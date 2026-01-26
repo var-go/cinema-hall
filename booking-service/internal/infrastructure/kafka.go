@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -28,15 +29,10 @@ func getKafkaBroker() string {
 	return broker
 }
 
-// kafkaWriter — объект для отправки сообщений в Kafka
-// Объявляем глобально, чтобы использовать во всех функциях
 var kafkaWriter *kafka.Writer
 
-// createTopic создаёт топик в Kafka, если он ещё не существует
-// Библиотека kafka-go не создаёт топики автоматически, поэтому делаем это вручную
 func createTopic() error {
 	kafkaBroker := getKafkaBroker()
-	// Устанавливаем соединение с Kafka
 	conn, err := kafka.Dial("tcp", kafkaBroker)
 	if err != nil {
 		config.GetLogger().Error("Failed to connect to Kafka", "error", err, "broker", kafkaBroker)
@@ -44,14 +40,12 @@ func createTopic() error {
 	}
 	defer conn.Close()
 
-	// Получаем информацию о контроллере кластера
 	controller, err := conn.Controller()
 	if err != nil {
 		config.GetLogger().Error("Failed to get Kafka controller", "error", err)
 		return err
 	}
 
-	// Подключаемся к контроллеру для создания топика
 	controllerConn, err := kafka.Dial("tcp", net.JoinHostPort(controller.Host, strconv.Itoa(controller.Port)))
 	if err != nil {
 		config.GetLogger().Error("Failed to connect to Kafka controller", "error", err, "host", controller.Host, "port", controller.Port)
@@ -59,7 +53,6 @@ func createTopic() error {
 	}
 	defer controllerConn.Close()
 
-	// Проверяем, существует ли топик
 	partitions, err := conn.ReadPartitions()
 	if err == nil {
 		for _, p := range partitions {
@@ -70,20 +63,17 @@ func createTopic() error {
 		}
 	}
 
-	// Конфигурация топика
 	topicConfig := kafka.TopicConfig{
 		Topic:             kafkaTopic,
 		NumPartitions:     1,
 		ReplicationFactor: 1,
 	}
 
-	// Создаём топик
 	err = controllerConn.CreateTopics(topicConfig)
 	if err != nil {
-		// Игнорируем ошибку, если топик уже существует
-		if err.Error() == "topic already exists" || 
-		   err.Error() == "TopicExistsException" ||
-		   err.Error() == "TopicExistsException: Topic 'bookings' already exists" {
+		errStr := err.Error()
+		if strings.Contains(errStr, "topic already exists") ||
+			strings.Contains(errStr, "TopicExistsException") {
 			config.GetLogger().Info("Kafka topic already exists", "topic", kafkaTopic)
 			return nil
 		}
@@ -95,14 +85,11 @@ func createTopic() error {
 	return nil
 }
 
-// initKafkaWriter создаёт и настраивает Kafka Writer
 func InitKafkaWriter() {
 	kafkaBroker := getKafkaBroker()
 	
-	// Сначала создаём топик, если его нет
 	if err := createTopic(); err != nil {
 		config.GetLogger().Error("Failed to create Kafka topic, continuing anyway", "error", err)
-		// Не создаём writer, если не удалось создать топик
 		return
 	}
 
@@ -116,7 +103,6 @@ func InitKafkaWriter() {
 	config.GetLogger().Info("Kafka writer initialized successfully", "topic", kafkaTopic, "broker", kafkaBroker)
 }
 
-// publishOrderCreated отправляет событие о создании заказа в Kafka
 func PublishOrderCreated(booking models.Booking) error {
 	if kafkaWriter == nil {
 		config.GetLogger().Error("Kafka writer is not initialized")

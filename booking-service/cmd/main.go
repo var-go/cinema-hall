@@ -14,11 +14,9 @@ import (
 )
 
 func main() {
-	// Инициализация логгера
 	logger := config.InitLogger()
 	logger.Info("Starting booking-service")
 
-	// Подключение к базе данных
 	db := config.Connect()
 
 	router := gin.Default()
@@ -30,7 +28,6 @@ func main() {
 
 	logger.Info("Database connected successfully")
 
-	// Автомиграция
 	if err := db.AutoMigrate(&models.Booking{}, &models.BookedSeat{}); err != nil {
 		logger.Error("Failed to migrate database", "error", err)
 		os.Exit(1)
@@ -38,11 +35,9 @@ func main() {
 
 	logger.Info("Database migration completed")
 
-	// Инициализация Kafka
 	infrastructure.InitKafkaWriter()
 	logger.Info("Kafka writer initialized")
 
-	// Инициализация репозиториев и сервисов
 	bookingRepo := repository.NewBookingRepository(db)
 	bookingSeatRepo := repository.NewBookingSeatRepository(db)
 	bookingService := services.NewBookingService(bookingRepo, bookingSeatRepo, db)

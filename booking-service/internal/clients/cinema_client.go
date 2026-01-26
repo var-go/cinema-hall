@@ -17,7 +17,7 @@ var httpClient = &http.Client{
 func getCinemaServiceURL() string {
 	url := os.Getenv("CINEMA_SERVICE_URL")
 	if url == "" {
-		return "http://localhost:8081" // Значение по умолчанию для локальной разработки
+		return "http://localhost:8081"
 	}
 	return url
 }

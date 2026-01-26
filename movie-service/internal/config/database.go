@@ -11,8 +11,6 @@ import (
 )
 
 func SetUpDatabaseConnection(logger *slog.Logger) (*gorm.DB, error) {
-	// Загружаем .env файл, но не считаем ошибкой его отсутствие
-	// (в Docker переменные окружения задаются через docker-compose)
 	if err := godotenv.Load(); err != nil {
 		logger.Info("No .env file found, using environment variables", "error", err)
 	}

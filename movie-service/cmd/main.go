@@ -46,7 +46,7 @@ func main() {
 	logger.Info("application started successfully")
 
 	if err := r.Run(":" + port); err != nil {
-		logger.Error("ошибка запуска сервера", slog.Any("error", err))
+		logger.Error("failed to start server", slog.Any("error", err))
 	}
 
 }

@@ -172,12 +172,10 @@ func (h *bookingTransport) ConfirmBooking(ctx *gin.Context) {
 	}
 
 	if err := infrastructure.PublishOrderCreated(*confirmed); err != nil {
-		// Если не удалось отправить — логируем, но не отменяем подтверждение
 		config.GetLogger().Error("Failed to publish event to Kafka",
 			"error", err,
 			"booking_id", confirmed.ID,
 			"session_id", confirmed.SessionID)
-		// НЕ прерываем выполнение - бронь уже подтверждена
 	} else {
 		config.GetLogger().Info("Successfully published booking confirm event to Kafka",
 			"booking_id", confirmed.ID)
@@ -213,12 +211,10 @@ func (h *bookingTransport) CancelBooking(ctx *gin.Context) {
 	}
 
 	if err := infrastructure.PublishOrderCreated(*cancelled); err != nil {
-		// Если не удалось отправить — логируем, но не отменяем операцию
 		config.GetLogger().Error("Failed to publish cancel event to Kafka",
 			"error", err,
 			"booking_id", cancelled.ID,
 			"session_id", cancelled.SessionID)
-		// НЕ прерываем выполнение - бронь уже отменена
 	} else {
 		config.GetLogger().Info("Successfully published booking cancel event to Kafka",
 			"booking_id", cancelled.ID,

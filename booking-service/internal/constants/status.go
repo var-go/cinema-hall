@@ -18,5 +18,5 @@ const (
 )
 
 const (
-	BookingTimeoutMinutes = 2
+	BookingTimeoutMinutes = 15
 )
