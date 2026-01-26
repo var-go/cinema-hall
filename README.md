@@ -5,20 +5,23 @@
 ## Функционал приложения
 
 - Регистрация и авторизация пользователей
-- Просмотр списка фильмов и детальной информации о фильме
-- Просмотр списка сеансов и детальной информации о сеансе
-- Просмотр агрегированной информации о сеансе с данными о фильме и зале
-- Создание бронирования билетов на сеанс
-- Просмотр списка бронирований и детальной информации о бронировании
-- Подтверждение бронирования
-- Отмена бронирования
-- Автоматическая отмена бронирований по истечении 15 минут
+- Просмотр фильмов и сеансов
+- Бронирование билетов с автоматической отменой через 15 минут
+- Управление залами и местами
+- Асинхронная обработка событий через Kafka
 
 ## Технологический стек
 
-- Go 1.25.4, Gin, PostgreSQL 15, GORM, Apache Kafka, JWT
+![Go](https://img.shields.io/badge/Go-1.25.4-00ADD8?logo=go)
+![Gin](https://img.shields.io/badge/Gin-1.9+-00D8FF?logo=go)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)
+![GORM](https://img.shields.io/badge/GORM-1.25+-FF6B6B?logo=go)
+![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.5+-231F20?logo=apache-kafka)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=json-web-tokens)
+![Docker](https://img.shields.io/badge/Docker-20.10+-2496ED?logo=docker)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2.0+-2496ED?logo=docker)
 
-**Архитектура**: Микросервисная архитектура (5 независимых сервисов: User, Movie, Cinema, Booking, Gateway)
+**Архитектура**: Микросервисная (5 сервисов: User, Movie, Cinema, Booking, Gateway)
 
 ## Архитектура
 
@@ -53,21 +56,63 @@
                      └─────────────────────┘
 ```
 
-## Запуск проекта
+## Быстрый старт
 
+### Требования
+
+- Docker 20.10+
+- Docker Compose 2.0+
+
+### Установка и запуск
+
+1. Клонируйте репозиторий:
 ```bash
 git clone <repository-url>
 cd cinema-hall
+```
+
+2. Запустите все сервисы:
+```bash
 docker-compose up -d
+```
+
+3. Заполните базу данных тестовыми данными:
+```bash
 ./seed_data.sh
 ```
 
-После запуска:
-- Gateway: http://localhost:8085
-- Kafka UI: http://localhost:8086
+Скрипт создаст:
+- Жанры фильмов
+- Фильмы
+- Кинозалы и места
+- Тестового пользователя
 
-## Участники разработки
+### Доступные сервисы
 
-- Усман Дзакаев (https://github.com/dzakaev)
-- Бекхан Хаджимагомадов (https://github.com/Bekkhanbs)
-- Вис Магомадов (https://github.com/magadov)
+После успешного запуска доступны следующие сервисы:
+
+- **API Gateway**: http://localhost:8085
+- **Kafka UI**: http://localhost:8086
+
+### Проверка работоспособности
+
+Проверить, что все сервисы работают:
+
+```bash
+curl http://localhost:8085/api/movies
+```
+
+Если сервисы запущены корректно, вы получите список фильмов (может быть пустым, если данные еще не загружены).
+
+### Остановка проекта
+
+```bash
+docker-compose down
+```
+
+## Команда разработки
+
+- [Али Умаров](https://github.com/AliUmarov)
+- [Усман Дзакаев](https://github.com/dzakaev)
+- [Бекхан Хаджимагомадов](https://github.com/Bekkhanbs)
+- [Вис Магомадов](https://github.com/magadov)
