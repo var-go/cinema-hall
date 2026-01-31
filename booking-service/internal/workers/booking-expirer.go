@@ -10,7 +10,7 @@ func StartExpiredBookingsWorker(bookingService services.BookingService) {
 	ticker := time.NewTicker(30 * time.Second)
 
 	logger := config.GetLogger()
-	logger.Info("Expired bookings worker started", "interval", "30 second")
+	logger.Info("Expired bookings worker started", "interval", "30 seconds")
 
 	if err := bookingService.ExpireOldBookings(); err != nil {
 		logger.Error("Failed to expire old bookings on startup", "error", err)
@@ -27,7 +27,7 @@ func StartEndedSessionsWorker(bookingService services.BookingService) {
 	ticker := time.NewTicker(30 * time.Second)
 
 	logger := config.GetLogger()
-	logger.Info("Ended sessions worker started", "interval", "30 second")
+	logger.Info("Ended sessions worker started", "interval", "30 seconds")
 
 	if err := bookingService.FreeSeatsForEndedSessions(); err != nil {
 		logger.Error("Failed to free seats for ended sessions on startup", "error", err)
