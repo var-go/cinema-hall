@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type BookingRepository interface {
@@ -18,7 +19,7 @@ type BookingRepository interface {
 	Update(id uint, req models.Booking) error
 	UpdateWithTx(tx *gorm.DB, id uint, req models.Booking) error
 	Delete(id uint) error
-	CheckBooked(sessionID uint, seatsID []uint) ([]uint, error)
+	CheckBooked(tx *gorm.DB, sessionID uint, seatsID []uint) ([]uint, error)
 	FindExpiredPendingBookings() ([]models.Booking, error)
 	FindBookingsForEndedSessions() ([]models.Booking, error)
 }
@@ -108,17 +109,19 @@ func (r *gormBookingRepository) Delete(id uint) error {
 	return nil
 }
 
-func (r *gormBookingRepository) CheckBooked(sessionID uint, seatIDs []uint) ([]uint, error) {
+func (r *gormBookingRepository) CheckBooked(tx *gorm.DB, sessionID uint, seatIDs []uint) ([]uint, error) {
 	if len(seatIDs) == 0 {
 		return []uint{}, nil
 	}
 
 	var bookedSeats []models.BookedSeat
 
-	err := r.db.
+	err := tx.
+		Model(&models.BookedSeat{}).
 		Joins("JOIN bookings ON booked_seats.booking_id = bookings.id").
 		Where("bookings.session_id = ? AND bookings.booking_status IN (?, ?) AND booked_seats.seat_id IN ?",
 			sessionID, constants.Pending, constants.Confirmed, seatIDs).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Find(&bookedSeats).Error
 
 	if err != nil {
