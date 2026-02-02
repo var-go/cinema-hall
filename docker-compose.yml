@@ -170,9 +170,7 @@ services:
         condition: service_healthy
     networks:
       - cinema-network
-    restart: unless-stopped
-
-  movie-service:
+    restart: unless-stopped  movie-service:
     build:
       context: ./movie-service
       dockerfile: Dockerfile

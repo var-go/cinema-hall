@@ -67,7 +67,7 @@ func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, 
 		return nil, fmt.Errorf("session already started")
 	}
 
-	bookedSeats, err := s.bookingRepo.CheckBooked(req.SessionID, req.SeatsID)
+	bookedSeats, err := s.bookingRepo.CheckBooked(tx, req.SessionID, req.SeatsID)
 	if err != nil {
 		tx.Rollback()
 		config.GetLogger().Error("Failed to check booked seats", "error", err, "session_id", req.SessionID, "seats", req.SeatsID)
