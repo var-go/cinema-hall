@@ -334,12 +334,18 @@ func (s *bookingService) ExpireBooking(id uint) (*models.Booking, error) {
 		return nil, err
 	}
 
+	updatedBooking, err := s.bookingRepo.GetByIDWithTx(tx, id)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	return booking, nil
+	return updatedBooking, err
 }
 
 func (s *bookingService) ExpireOldBookings() error {
