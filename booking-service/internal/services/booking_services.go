@@ -45,6 +45,7 @@ func NewBookingService(bookingRepo repository.BookingRepository, bookingSeatRepo
 func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, error) {
 	tx := s.db.Begin()
 	if tx.Error != nil {
+		config.GetLogger().Error("Failed to start transaction for booking creation", "error", tx.Error, "session_id", req.SessionID, "user_id", req.UserID)
 		return nil, tx.Error
 	}
 
@@ -143,7 +144,9 @@ func (s *bookingService) Update(id uint, req dto.BookingUpdateRequest) (*models.
 	}
 
 	if req.BookingStatus != nil {
+		oldStatus := booking.BookingStatus
 		booking.BookingStatus = *req.BookingStatus
+		config.GetLogger().Info("Updating booking status", "booking_id", id, "old_status", oldStatus, "new_status", *req.BookingStatus)
 	}
 
 	if err := s.bookingRepo.Update(id, *booking); err != nil {
@@ -151,6 +154,7 @@ func (s *bookingService) Update(id uint, req dto.BookingUpdateRequest) (*models.
 		return nil, err
 	}
 
+	config.GetLogger().Info("Booking updated successfully", "booking_id", id)
 	return booking, nil
 }
 
@@ -345,7 +349,7 @@ func (s *bookingService) ExpireBooking(id uint) (*models.Booking, error) {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	return updatedBooking, err
+	return updatedBooking, nil
 }
 
 func (s *bookingService) ExpireOldBookings() error {
@@ -442,7 +446,7 @@ func (s *bookingService) FreeSeatsForEndedSessions() error {
 		config.GetLogger().Info("Seats freed for ended session",
 			"booking_id", booking.ID,
 			"session_id", currentBooking.SessionID,
-			"old_status", booking.BookingStatus,
+			"old_status", currentBooking.BookingStatus,
 			"new_status", finalStatus)
 	}
 
