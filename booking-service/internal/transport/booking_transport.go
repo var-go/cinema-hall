@@ -210,7 +210,7 @@ func (h *bookingTransport) CancelBooking(ctx *gin.Context) {
 		}
 	}
 
-	if err := infrastructure.PublishOrderCreated(*cancelled); err != nil {
+	if err := infrastructure.PublishOrderCancelled(*cancelled); err != nil {
 		config.GetLogger().Error("Failed to publish cancel event to Kafka",
 			"error", err,
 			"booking_id", cancelled.ID,

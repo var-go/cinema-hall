@@ -23,7 +23,13 @@ type SessionResponse struct {
 	Status    string    `json:"status"`
 }
 
-type BookingConfirmResponse struct {
+type BookingCreatedEvent struct {
+	SessionID     uint                     `json:"session_id"`
+	UserID        uint                     `json:"user_id"`
+	BookingStatus *constants.BookingStatus `json:"booking_status"`
+}
+
+type BookingCancelledEvent struct {
 	SessionID     uint                     `json:"session_id"`
 	UserID        uint                     `json:"user_id"`
 	BookingStatus *constants.BookingStatus `json:"booking_status"`
