@@ -87,16 +87,16 @@ func createTopic() error {
 
 func InitKafkaWriter() {
 	kafkaBroker := getKafkaBroker()
-	
+
 	if err := createTopic(); err != nil {
 		config.GetLogger().Error("Failed to create Kafka topic, continuing anyway", "error", err)
 		return
 	}
 
 	kafkaWriter = &kafka.Writer{
-		Addr:     kafka.TCP(kafkaBroker),
-		Topic:    kafkaTopic,
-		Balancer: &kafka.LeastBytes{},
+		Addr:         kafka.TCP(kafkaBroker),
+		Topic:        kafkaTopic,
+		Balancer:     &kafka.LeastBytes{},
 		WriteTimeout: 10 * time.Second,
 		RequiredAcks: 1,
 	}
@@ -109,7 +109,43 @@ func PublishOrderCreated(booking models.Booking) error {
 		return fmt.Errorf("kafka writer is not initialized")
 	}
 
-	event := dto.BookingConfirmResponse{
+	event := dto.BookingCreatedEvent{
+		SessionID:     booking.SessionID,
+		UserID:        booking.UserID,
+		BookingStatus: &booking.BookingStatus,
+	}
+
+	eventJSON, err := json.Marshal(event)
+	if err != nil {
+		config.GetLogger().Error("Failed to marshal event", "error", err)
+		return err
+	}
+
+	msg := kafka.Message{
+		Key:   []byte(fmt.Sprintf("booking-%d", booking.ID)),
+		Value: eventJSON,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err = kafkaWriter.WriteMessages(ctx, msg)
+	if err != nil {
+		config.GetLogger().Error("Failed to publish event to Kafka", "error", err, "booking_id", booking.ID)
+		return err
+	}
+
+	config.GetLogger().Info("Event published to Kafka", "booking_id", booking.ID, "topic", kafkaTopic)
+	return nil
+}
+
+func PublishOrderCancelled(booking models.Booking) error {
+	if kafkaWriter == nil {
+		config.GetLogger().Error("Kafka writer is not initialized")
+		return fmt.Errorf("kafka writer is not initialized")
+	}
+
+	event := dto.BookingCancelledEvent{
 		SessionID:     booking.SessionID,
 		UserID:        booking.UserID,
 		BookingStatus: &booking.BookingStatus,
