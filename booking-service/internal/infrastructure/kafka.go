@@ -135,7 +135,10 @@ func PublishOrderCreated(booking models.Booking) error {
 		return err
 	}
 
-	config.GetLogger().Info("Event published to Kafka", "booking_id", booking.ID, "topic", kafkaTopic)
+	config.GetLogger().Info("Booking created event published to Kafka",
+		"booking_id", booking.ID,
+		"topic", kafkaTopic,
+		"event_type", "created")
 	return nil
 }
 
@@ -171,6 +174,9 @@ func PublishOrderCancelled(booking models.Booking) error {
 		return err
 	}
 
-	config.GetLogger().Info("Event published to Kafka", "booking_id", booking.ID, "topic", kafkaTopic)
+	config.GetLogger().Info("Booking cancelled event published to Kafka",
+		"booking_id", booking.ID,
+		"topic", kafkaTopic,
+		"event_type", "cancelled")
 	return nil
 }
