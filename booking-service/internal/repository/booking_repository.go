@@ -101,7 +101,7 @@ func (r *gormBookingRepository) UpdateWithTx(tx *gorm.DB, id uint, req models.Bo
 }
 
 func (r *gormBookingRepository) Delete(id uint) error {
-	if err := r.db.Delete(&models.Booking{}, id).Error; err != nil {
+	if err := r.db.Select(clause.Association{}).Delete(&models.Booking{}, id).Error; err != nil {
 		config.GetLogger().Error("Failed to delete booking", "error", err, "booking_id", id)
 		return err
 	}
