@@ -13,7 +13,7 @@ type Booking struct {
 	BookingStatus constants.BookingStatus `json:"booking_status" gorm:"default:pending;index"`
 	PaymentStatus constants.PaymentStatus `json:"payment_status" gorm:"default:pending;index"`
 	ExpiresAt     time.Time               `json:"expires_at" gorm:"not null;index"`
-	BookedSeats   []BookedSeat            `json:"booked_seats" gorm:"foreignKey:BookingID"`
+	BookedSeats   []BookedSeat            `json:"booked_seats" gorm:"foreignKey:BookingID;constraint:OnDelete:CASCADE"`
 
 	SessionStartTime time.Time `json:"session_start_time" gorm:"not null;index"`
 	SessionEndTime   time.Time `json:"session_end_time" gorm:"not null;index"`
