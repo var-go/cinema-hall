@@ -43,6 +43,12 @@ func NewBookingService(bookingRepo repository.BookingRepository, bookingSeatRepo
 }
 
 func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, error) {
+	if len(req.SeatsID) == 0 {
+		config.GetLogger().Warn("Attempt to create booking with empty seats list",
+			"session_id", req.SessionID, "user_id", req.UserID)
+		return nil, fmt.Errorf("seats list cannot be empty")
+	}
+
 	tx := s.db.Begin()
 	if tx.Error != nil {
 		config.GetLogger().Error("Failed to start transaction for booking creation", "error", tx.Error, "session_id", req.SessionID, "user_id", req.UserID)
