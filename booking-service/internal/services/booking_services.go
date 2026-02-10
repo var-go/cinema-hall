@@ -112,6 +112,7 @@ func (s *bookingService) Create(req dto.BookingCreateRequest) (*models.Booking, 
 	bookingWithSeats, err := s.bookingRepo.GetByIDWithTx(tx, newBooking.ID)
 	if err != nil {
 		tx.Rollback()
+		config.GetLogger().Error("Failed to get booking after creation", "error", err, "booking_id", newBooking.ID)
 		return nil, err
 	}
 
