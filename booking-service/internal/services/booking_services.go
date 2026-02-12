@@ -244,6 +244,7 @@ func (s *bookingService) ConfirmBooking(id uint) (*models.Booking, error) {
 func (s *bookingService) CancelBooking(id uint) (*models.Booking, error) {
 	tx := s.db.Begin()
 	if tx.Error != nil {
+		config.GetLogger().Error("Failed to start transaction for booking cancel", "error", tx.Error, "booking_id", id)
 		return nil, tx.Error
 	}
 
